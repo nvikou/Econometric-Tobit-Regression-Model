@@ -1,3 +1,54 @@
-notebooks/data
-notebooks/cifar_net.pth
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter Notebooks
 .ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+*.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-*
+
+# Data files (uncommenter si les données sont trop volumineuses)
+# data/*.csv
+# data/*.txt
+
+# Model files
+*.pth
+*.pkl
+*.h5
+*.model
+
+# OS
+.DS_Store
+Thumbs.db
+*.bak
+
+# Logs
+*.log
+logs/
+
+# Documentation build
+docs/_build/
+site/
