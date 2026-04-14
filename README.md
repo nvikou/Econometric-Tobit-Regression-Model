@@ -1,4 +1,4 @@
-# Tobit Regression Model 📊
+# Econometric-Tobit-Regression-Model 📊
 
 Implementation d'un modèle de régression Tobit (régression censurée) utilisant l'estimation par maximum de vraisemblance en Python.
 
