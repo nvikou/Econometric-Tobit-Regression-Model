@@ -132,14 +132,6 @@ usage_tobit.py
 requirements.txt
 ```
 
-## Limitations (intentional)
-
-- No CI workflow or packaged PyPI release in this revision (planned).
-- Standard errors assume a regular MLE at an interior optimum.
-- Prediction returns the latent index \(x\hat\beta\) (plus intercept),
-  not \(E[y \mid x]\) under censoring. Marginal effects on the
-  censored mean are left to the caller.
-
 ## References
 
 - Tobin, J. (1958). Estimation of relationships for limited dependent
