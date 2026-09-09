@@ -1,93 +1,152 @@
-# Econometric-Tobit-Regression-Model 📊
+# Tobit Regression (MLE)
 
-Implementation d'un modèle de régression Tobit (régression censurée) utilisant l'estimation par maximum de vraisemblance en Python.
+Maximum-likelihood Tobit estimator for left-, right-, and doubly
+censored outcomes, with a scikit-learn-style API
+(`fit` / `predict` / `score`) and Wald inference from the observed
+Fisher information.
 
-## Description
+**GitHub About (short):**  
+MLE Tobit for censored data — sklearn-compatible API, Fisher SEs.
 
-Ce projet fournit une implémentation complète du modèle de régression Tobit, utile pour les ensembles de données où la variable dépendante est censurée (tronquée). Le modèle Tobit est particulièrement pertinent pour :
-- Les données avec censure à gauche (valeurs minimales tronquées)
-- Les données avec censure à droite (valeurs maximales tronquées)
-- Les données doublement censurées
+## Why Tobit, not OLS
 
-## Structure du Projet
+When \(y\) is censored (corner solutions, detection limits, truncated
+hours, etc.), OLS on the observed sample is inconsistent for the
+latent linear index. Tobit models the latent variable
+\(y^* = x\beta + u\), \(u \sim \mathcal{N}(0,\sigma^2)\), and observes
+only the censored mapping of \(y^*\). Estimation is by maximizing the
+censored normal likelihood, not by least squares.
 
+This repository implements that estimator in NumPy/SciPy — not a
+wrapper around an external Tobit package.
+
+## What is implemented
+
+| Piece | Detail |
+| --- | --- |
+| Likelihood | Left / uncensored / right contributions |
+| Optimization | BFGS on the negative log-likelihood |
+| Gradient | Analytical score (not pure finite differences) |
+| Inference | Observed Fisher via Hessian of the NLL → `cov_`, `stderr_`, \(z\), \(p\) |
+| API | `TobitModel` mirrors common sklearn estimator patterns |
+| Reference check | Affairs data; coefficients comparable to R `censReg` (see notebook) |
+
+Also stores OLS coefficients fitted on the same design for a quick
+bias illustration — not as a competing estimator.
+
+## Decisions and trade-offs
+
+- **MLE over OLS on censored \(y\)** — required for consistency under
+  the Tobit DGP; OLS is kept only as a didactic baseline.
+- **Analytical gradient + BFGS** — faster and more stable than
+  derivative-free methods on this smooth likelihood; BFGS’s internal
+  `hess_inv` is *not* used for reported standard errors.
+- **Observed Fisher from the NLL Hessian** — finite differences on the
+  analytical score, then inverted. This is the usual MLE sandwich
+  for asymptotically normal \(\hat\theta\) under correct
+  specification. Expected information (outer product of scores) is
+  not computed separately.
+- **Unconstrained \(\sigma\) in the optimizer** — same pattern as many
+  textbook implementations; callers should check `sigma_ > 0` after
+  fit. A log-\(\sigma\) reparameterization would be a natural hardening
+  step.
+- **Scope** — classical Type I Tobit with normal errors. No hurdle /
+  selection (Heckman), no heteroskedasticity, no panel random
+  effects.
+
+## Fisher inference
+
+After `fit`, the observed information matrix is
+
+\[
+\mathcal{I}(\hat\theta)
+= \nabla^2_{\theta} \bigl(-\ell(\hat\theta)\bigr),
+\qquad
+\widehat{\mathrm{Var}}(\hat\theta)
+= \mathcal{I}(\hat\theta)^{-1}.
+\]
+
+Exposed attributes:
+
+- `fisher_info_` — observed information
+- `cov_` — parameter covariance
+- `stderr_`, `zvalues_`, `pvalues_`
+- `loglik_`, `params_`, `param_names_`
+
+```python
+print(model.summary())
+# or
+model.summary_frame()
 ```
-codespaces-jupyter/
-├── moduletobit/
-│   ├── __init__.py      # Initialisation du module
-│   └── tobit.py         # Classe TobitModel
-├── usage_tobit.py       # Script d'exemple d'utilisation
-├── requirements.txt     # Dépendances Python
-├── data/
-│   └── tobit_data.txt   # Données d'exemple (Affairs dataset)
-└── notebooks/
-    └── tobit.ipynb      # Notebook Jupyter avec exemples et comparaisons
-```
 
-## Installation
+`summary()` prints coefficients, standard errors, Wald \(z\)-tests,
+and normal confidence intervals. If the information matrix is
+numerically singular, a pseudo-inverse is used and a warning is
+emitted.
 
-Installez les dépendances requises :
+## Install
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Utilisation
+Core runtime: `numpy`, `pandas`, `scipy`, `scikit-learn`.  
+`matplotlib` / Jupyter are only needed for the notebooks.
 
-### Utilisation Basique
+## Quick start
 
 ```python
 from moduletobit import TobitModel
 import pandas as pd
-import numpy as np
 
-# Préparer vos données
-x = pd.DataFrame(...)  # Variables explicatives
-y = pd.Series(...)     # Variable cible
-cens = pd.Series(...)  # Indicateur de censure (-1: gauche, 0: non censuré, 1: droite)
-
-# Ajuster le modèle
+# cens: -1 left-censored, 0 uncensored, 1 right-censored
 model = TobitModel(fit_intercept=True)
-model.fit(x, y, cens, verbose=False)
+model.fit(x, y, cens)
 
-# Faire des prédictions
-predictions = model.predict(x)
-
-# Afficher les coefficients
-print("Coefficients:", model.coef_)
-print("Intercept:", model.intercept_)
-print("Sigma:", model.sigma_)
+y_hat = model.predict(x)
+print(model.summary())
 ```
 
-### Exemples dans le Notebook
+Runnable example on the Affairs dataset:
 
-Le notebook `notebooks/tobit.ipynb` contient deux exemples complets :
+```bash
+python usage_tobit.py
+```
 
-1. **Données artificielles** : Récupération des vrais coefficients sur des données de régression censurées générées artificiellement
-2. **Données réelles** : Analyse du dataset Affairs avec comparaison aux résultats du package R `censReg`
+Notebooks:
 
-## Caractéristiques
+- `notebooks/tobit.ipynb` — synthetic recovery of known \(\beta\), then
+  Affairs vs R `censReg`
+- `notebooks/tobit_cour_pratique.ipynb` — worked course-style example
 
-- ✅ Estimation par maximum de vraisemblance avec optimisation BFGS
-- ✅ Support de la censure à gauche, à droite et double
-- ✅ Calcul analytique du gradient pour une optimisation efficace
-- ✅ Comparaison avec les coefficients OLS
-- ✅ Interface compatible avec scikit-learn
-- ✅ Documentation complète avec docstrings
-- ✅ Validation sur des données réelles (compatible avec R censReg)
+## Layout
 
-## Dépendances
+```
+moduletobit/
+  tobit.py          # likelihood, score, Fisher, TobitModel
+  __init__.py
+data/
+  tobit_data.txt    # Affairs (AER)
+notebooks/
+usage_tobit.py
+requirements.txt
+```
 
-- numpy
-- pandas
-- scipy
-- scikit-learn
-- matplotlib (pour les visualisations dans le notebook)
+## Limitations (intentional)
 
-## Références
+- No CI workflow or packaged PyPI release in this revision (planned).
+- Standard errors assume a regular MLE at an interior optimum.
+- Prediction returns the latent index \(x\hat\beta\) (plus intercept),
+  not \(E[y \mid x]\) under censoring. Marginal effects on the
+  censored mean are left to the caller.
 
-Le modèle Tobit a été introduit par James Tobin en 1958. Cette implémentation suit la méthodologie standard d'estimation par maximum de vraisemblance avec l'hypothèse d'erreurs normalement distribuées.
+## References
 
-## Licence
+- Tobin, J. (1958). Estimation of relationships for limited dependent
+  variables. *Econometrica*.
+- Standard censored-normal MLE; R reference implementation:
+  [`censReg`](https://cran.r-project.org/package=censReg).
 
-Voir le fichier LICENSE pour plus de détails.
+## License
+
+MIT — see `LICENSE`.
