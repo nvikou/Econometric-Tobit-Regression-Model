@@ -13,14 +13,12 @@ def load_affairs_data():
     """Load and prepare the Affairs dataset."""
     print("Loading Affairs dataset...")
     df = pd.read_table('data/tobit_data.txt', sep=' ')
-    
+
     # Convert categorical variables to numeric
-    df.loc[df.gender == 'male', 'gender'] = 1
-    df.loc[df.gender == 'female', 'gender'] = 0
-    df.loc[df.children == 'yes', 'children'] = 1
-    df.loc[df.children == 'no', 'children'] = 0
+    df['gender'] = (df['gender'] == 'male').astype(float)
+    df['children'] = (df['children'] == 'yes').astype(float)
     df = df.astype(float)
-    
+
     return df
 
 
@@ -58,20 +56,8 @@ def main():
     print("Fitting Tobit model...")
     model = TobitModel(fit_intercept=True)
     model.fit(x, y, cens, verbose=False)
-    
-    # Display results
-    print("\n" + "="*60)
-    print("TOBIT MODEL RESULTS")
-    print("="*60)
-    print(f"\n{'Variable':<20} {'Coefficient':>15}")
-    print("-"*40)
-    
-    for col, coef in zip(x.columns, model.coef_):
-        print(f"{col:<20} {coef:>15.4f}")
-    
-    print(f"{'Intercept':<20} {model.intercept_:>15.4f}")
-    print(f"{'Sigma':<20} {model.sigma_:>15.4f}")
-    print("="*60)
+
+    print("\n" + model.summary())
     
     # Make predictions
     predictions = model.predict(x)
