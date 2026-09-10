@@ -16,3 +16,6 @@ ipywidgets>=8.1.0
 
 # Utilities
 tqdm>=4.66.0
+
+# Testing
+pytest>=7.4.0

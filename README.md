@@ -1,12 +1,11 @@
 # Tobit Regression (MLE)
 
+[![CI](https://github.com/nvikou/Econometric-Tobit-Regression-Model/actions/workflows/ci.yml/badge.svg)](https://github.com/nvikou/Econometric-Tobit-Regression-Model/actions/workflows/ci.yml)
+
 Maximum-likelihood Tobit estimator for left-, right-, and doubly
 censored outcomes, with a scikit-learn-style API
 (`fit` / `predict` / `score`) and Wald inference from the observed
 Fisher information.
-
-**GitHub About (short):**  
-MLE Tobit for censored data — sklearn-compatible API, Fisher SEs.
 
 ## Why Tobit, not OLS
 
@@ -30,6 +29,7 @@ wrapper around an external Tobit package.
 | Inference | Observed Fisher via Hessian of the NLL → `cov_`, `stderr_`, \(z\), \(p\) |
 | API | `TobitModel` mirrors common sklearn estimator patterns |
 | Reference check | Affairs data; coefficients comparable to R `censReg` (see notebook) |
+| Tests / CI | `pytest` on synthetic recovery + Affairs smoke; GitHub Actions |
 
 Also stores OLS coefficients fitted on the same design for a quick
 bias illustration — not as a competing estimator.
@@ -92,6 +92,15 @@ pip install -r requirements.txt
 
 Core runtime: `numpy`, `pandas`, `scipy`, `scikit-learn`.  
 `matplotlib` / Jupyter are only needed for the notebooks.
+
+## Tests
+
+```bash
+pytest
+```
+
+CI runs the same suite on Python 3.10 and 3.12 for every push/PR to
+`main`.
 
 ## Quick start
 
