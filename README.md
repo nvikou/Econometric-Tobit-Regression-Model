@@ -102,6 +102,19 @@ pytest
 CI runs the same suite on Python 3.10 and 3.12 for every push/PR to
 `main`.
 
+## Demo
+
+Affairs dataset (left-censored at 0): MLE coefficients with 95% Wald
+intervals from the observed Fisher information.
+
+![Tobit Wald CIs on Affairs](assets/demo_wald_ci.png)
+
+```bash
+python demo_tobit.py
+```
+
+Prints `summary()` and regenerates the figure above.
+
 ## Quick start
 
 ```python
@@ -136,7 +149,10 @@ moduletobit/
   __init__.py
 data/
   tobit_data.txt    # Affairs (AER)
+assets/
+  demo_wald_ci.png  # Wald CI figure from demo_tobit.py
 notebooks/
+demo_tobit.py
 usage_tobit.py
 requirements.txt
 ```
